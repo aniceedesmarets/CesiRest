@@ -14,7 +14,19 @@ class Client
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private $idClient;
+    /**
+     * @ORM\Column(type="string", length=100)
+     */
+    private $nomClient;
+    /**
+     * @ORM\Column(type="string", length=100)
+     */
+    private $prenomClient;
+    /**
+     * @ORM\Column(type="string", length=10)
+     */
+    private $telClient;
 
     // add your own fields
 }
