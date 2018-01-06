@@ -1,0 +1,158 @@
+{% extends "base.html.twig" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="src/style.css" media="screen" />
+{% endblock %}
+
+{% block body %}
+<h1>Enregistrer un nouveau rdv</h1>
+
+        <form method="post" action="#" id="formcom">
+            <p>
+                Id client : <input type="text"  name="id" />
+                Jour rdv  : <input type="text"  name="jour" />
+                Heure rdv : <input type="text" name="heure" />
+                <input type="submit" value="save" />
+            </p>
+        </form>
+
+<h1>Modifier un rdv</h1>
+    <div id="modifier">
+        <form  id="modifrdv">
+            <p>
+                Id : <input type="text"  name="id" id="idmodifrdv" disabled="disabled"/>
+                Choisir client : <input type="text"  name="idcli" id="idclientmodifrdv" />
+                Jour rdv  : <input type="text"  name="jour" id="jourmodifrdv" />
+                Heure rdv : <input type="text" name="heure" id="heuremodifrdv"/>
+                <input type="submit" value="save" />
+            </p>
+        </form>
+    </div>
+ 
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        //enregistrement d'une nouvelle facture
+       $(function(){
+           $("#formcom").submit(function(){
+              id=$(this).find("input[name=id]").val();
+              jour=$(this).find("input[name=jour]").val();
+              heure=$(this).find("input[name=heure]").val();
+
+              $.post("http://localhost:8000/rdv/",
+              {
+                  id:id,
+                  jour:jour,
+                  heure:heure
+              },
+                  function(data){
+                      alert(data);
+                  }
+                      )
+              return false;
+           }
+                   );
+           
+       });
+    </script> 
+    
+<h1>Tableau</h1><br>
+<div id="tableaurdv" class="panel panel-primary spacer">
+    <div class="panel-heading">Liste des factures</div>
+    <div class="panel-body">
+
+      <table class="table table-striped">
+        <tr id="tbody">
+          <th>Id Client</th>
+          <th>Jour</th>
+          <th>Heure</th>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+<script>
+    //retourner un tableau avec tous rdv
+    $(document).ready(function(){
+       $.ajax({
+            url: "http://localhost:8000/rdv",
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                //les données reçues sont en texte il faut les passer en json pour pouvoir les utiliser
+                var rdv = jQuery.parseJSON(msg);
+                
+                for (var i = 0 ; i < rdv.length ; i++){
+                    var ligne = $("<tr></tr>");
+				ligne.append($("<td>" + rdv[i].client.id + "</td>"));
+				ligne.append($("<td>" + rdv[i].jour_rdv + "</td>"));
+				ligne.append($("<td>" + rdv[i].heure_rdv + "</td>"));
+                                ligne.append($("<td>\n\
+                                                <button class='supprrdv' id="+rdv[i].id+">del</button>\n\
+                                                \n\<button class='modifrdv' id="+rdv[i].id+">Update</button>\n\
+                                                </td>"));
+                                $("tbody").append(ligne);
+                } 
+            }
+        });     
+    });  
+</script>
+<script>
+    //Supprimer un rdv
+    $(document).on('click', 'button.supprrdv', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/rdv/"+x,
+            type:"delete",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                console.log(msg);
+            }
+        });         
+    });
+</script>
+<script>
+    //chargement du formulaire de modification d'une facture
+    $(document).on('click', 'button.modifrdv', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/rdv/"+x,
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                var rdv = jQuery.parseJSON(msg);
+                console.log(rdv);
+                $("#idmodifrdv").val(rdv.id);
+                $("#idclientmodifrdv").val(rdv.client.id);
+                $("#jourmodifrdv").val(rdv.jour_rdv);
+                $("#heuremodifrdv").val(rdv.heure_rdv);
+            }
+        });         
+    });
+</script>
+
+<script>
+        //enregistrement de la modification d'un rdv
+       $("#modifrdv").submit(function(){
+           id=$(this).find("input[name=id]").val();
+           jour=$(this).find("input[name=jour]").val();
+           heure=$(this).find("input[name=heure]").val();
+           idcli=$(this).find("input[name=idcli]").val();
+           
+           var dataObject = { 'id': id, 'jour': jour, 'heure': heure, 'idcli':idcli};
+           
+           alert(JSON.stringify(dataObject));
+           
+           $.ajax({
+                url: "http://localhost:8000/rdv/",
+                type: 'PUT',
+                data: dataObject,
+                dataType: 'json',
+                success: function(data) {
+                  console.log('Load was performed.');
+                }
+              });
+       });
+    </script> 
+
+{% endblock %}

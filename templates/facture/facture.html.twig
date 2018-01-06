@@ -1,0 +1,175 @@
+{% extends "base.html.twig" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="src/style.css" media="screen" />
+{% endblock %}
+
+{% block body %}
+<h1>Enregistrer une nouvelle facture</h1>
+
+        <form method="post" action="#" id="formcom">
+            <p>
+                Id client : <input type="text"  name="id" />
+                Montant facture  : <input type="text"  name="montant" />
+                Etat facture : <select name="etat" id="choixetat">
+                                    <option SELECTED>-- Sélectionnez un état --</option>
+                                    <option>Payé</option>
+                                    <option>Non payé</option>
+                               </select>
+                Date facture : <input type="text" name="date" />
+                <input type="submit" value="save" />
+            </p>
+        </form>
+
+<h1>Modifier une facture</h1>
+    <div id="modifier">
+        <form  id="modiffacture">
+            <p>
+                Id : <input type="text"  name="id" id="idmodiffacture" disabled="disabled"/>
+                Choisir client : <input type="text"  name="idcli" id="idclientmodiffacture" />
+                Montant facture  : <input type="text"  name="montant" id="montantmodiffacture" />
+                Etat facture : <select name="etat" id="etatmodiffacture">
+                                    <option SELECTED>-- Sélectionnez un état --</option>
+                                    <option>Payé</option>
+                                    <option>Non payé</option>
+                               </select>
+                Date facture : <input type="text" name="date" id="datemodiffacture"/>
+                <input type="submit" value="save" />
+            </p>
+        </form>
+    </div>
+ 
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        //enregistrement d'une nouvelle facture
+       $(function(){
+           $("#formcom").submit(function(){
+              id=$(this).find("input[name=id]").val();
+              montant=$(this).find("input[name=montant]").val();
+              etat=$(this).find("select[name=etat]").val();
+              date=$(this).find("input[name=date]").val();
+              
+
+              $.post("http://localhost:8000/facture/",
+              {
+                  id:id,
+                  montant:montant,
+                  etat:etat,
+                  date:date
+              },
+                  function(data){
+                      alert(data);
+                  }
+                      )
+              return false;
+           }
+                   );
+           
+       });
+    </script> 
+    
+<h1>Tableau</h1><br>
+<div id="tableaufacture" class="panel panel-primary spacer">
+    <div class="panel-heading">Liste des factures</div>
+    <div class="panel-body">
+
+      <table class="table table-striped">
+        <tr id="tbody">
+          <th>Id Client</th>
+          <th>Montant facture</th>
+          <th>Etat</th>
+          <th>Date</th>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+<script>
+    //retourner un tableau avec tous clients
+    $(document).ready(function(){
+       $.ajax({
+            url: "http://localhost:8000/facture",
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                //les données reçues sont en texte il faut les passer en json pour pouvoir les utiliser
+                var facture = jQuery.parseJSON(msg);
+                
+                for (var i = 0 ; i < facture.length ; i++){
+                    var ligne = $("<tr></tr>");
+				ligne.append($("<td>" + facture[i].client.id + "</td>"));
+				ligne.append($("<td>" + facture[i].montant_facture + "</td>"));
+				ligne.append($("<td>" + facture[i].etat_facture + "</td>"));
+                                ligne.append($("<td>" + facture[i].date_facture + "</td>"));
+                                ligne.append($("<td>\n\
+                                                <button class='supprfacture' id="+facture[i].id+">del</button>\n\
+                                                \n\<button class='modiffacture' id="+facture[i].id+">Update</button>\n\
+                                                </td>"));
+                                $("tbody").append(ligne);
+                } 
+            }
+        });     
+    });  
+</script>
+<script>
+    //Supprimer une facture
+    $(document).on('click', 'button.supprfacture', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/facture/"+x,
+            type:"delete",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                console.log(msg);
+            }
+        });         
+    });
+</script>
+<script>
+    //chargement du formulaire de modification d'une facture
+    $(document).on('click', 'button.modiffacture', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/facture/"+x,
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                var facture = jQuery.parseJSON(msg);
+                console.log(facture);
+                $("#idmodiffacture").val(facture.id);
+                $("#idclientmodiffacture").val(facture.client.id);
+                $("#montantmodiffacture").val(facture.montant_facture);
+                $("#etatmodiffacture").val(facture.etat_facture);
+                $("#datemodiffacture").val(facture.date_facture);
+            }
+        });         
+    });
+</script>
+
+<script>
+        //enregistrement de la modification d'un client
+       $("#modiffacture").submit(function(){
+           id=$(this).find("input[name=id]").val();
+           montant=$(this).find("input[name=montant]").val();
+           etat=$(this).find("select[name=etat]").val();
+           date=$(this).find("input[name=date]").val();
+           idcli=$(this).find("input[name=idcli]").val();
+           
+           var dataObject = { 'id': id, 'montant': montant, 'etat': etat, 'date': date, 'idcli':idcli};
+           
+           alert(JSON.stringify(dataObject));
+           
+           $.ajax({
+                url: "http://localhost:8000/facture/",
+                type: 'PUT',
+                data: dataObject,
+                dataType: 'json',
+                success: function(data) {
+                  console.log('Load was performed.');
+                }
+              });
+       });
+    </script> 
+
+{% endblock %}

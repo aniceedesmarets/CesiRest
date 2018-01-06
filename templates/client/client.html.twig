@@ -1,0 +1,173 @@
+{% extends "base.html.twig" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="src/style.css" media="screen" />
+{% endblock %}
+
+{% block body %}
+<h1>Enregistrer un nouveau client</h1>
+
+        <form method="post" action="#" id="formcom">
+            <p>
+                Nom  : <input type="text"  name="nom" />
+                Prenom : <input type="text" name="prenom"  />
+                Telephonne : <input type="text" name="tel" />
+                <input type="submit" value="save" />
+            </p>
+        </form>
+
+<h1>Modifier un client</h1>
+   <div id="modifier">
+    <form  id="modifclient">
+            <p>
+                Id : <input type="text"  name="id" id="idmodifclient" disabled="disabled"/>
+                Nom  : <input type="text"  name="nom" id="nommodifclient" />
+                Prenom : <input type="text" name="prenom" id="prenommodifclient"   />
+                Telephonne : <input type="text" name="tel" id="telrenommodifclient"/>
+                <input type="submit" value="save" />
+            </p>
+    </form>
+       
+</div>
+ 
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        //enregistrement d'un nouveau client
+       $(function(){
+           $("#formcom").submit(function(){
+              nom=$(this).find("input[name=nom]").val();
+              prenom=$(this).find("input[name=prenom]").val();
+              tel=$(this).find("input[name=tel]").val();
+              $.post("http://localhost:8000/client/",
+              {
+                  nom:nom,
+                  prenom:prenom,
+                  tel:tel
+              },
+               function(data){
+                      alert(data);
+                             }
+                    )
+              return false;
+                                        }
+                                );
+           
+                    }
+        );
+    </script> 
+
+<h1>Tableau</h1><br>
+<div id="tableauclient" class="panel panel-primary spacer">
+    <div class="panel-heading">Liste des clients</div>
+    <div class="panel-body">
+
+      <table class="table table-striped">
+        <tr id="tbody">
+          <th>Id</th>
+          <th>Nom</th>
+          <th>Prenom</th>
+          <th>Tel</th>
+          <th>Modif</th>
+        </tr>
+ 
+      </table>
+    </div>
+  </div>
+
+
+<script>
+    //retourner un tableau avec tous clients
+    $(document).ready(function(){
+       $.ajax({
+            url: "http://localhost:8000/client",
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                //les données reçues sont en texte il faut les passer en json pour pouvoir les utiliser
+                var client = jQuery.parseJSON(msg);
+                
+                
+                
+                for (var i = 0 ; i < client.length ; i++){
+                    var ligne = $("<tr></tr>");
+                                ligne.append($("<td>" + client[i].id + "</td>"));
+				ligne.append($("<td>" + client[i].nom_client + "</td>"));
+				ligne.append($("<td>" + client[i].prenom_client + "</td>"));
+				ligne.append($("<td>" + client[i].tel_client + "</td>"));
+                                ligne.append($("<td>\n\
+                                                <button class='supprclient' id="+client[i].id+">del</button>\n\
+                                                \n\<button class='modifclient' id="+client[i].id+">Update</button>\n\
+                                                </td>"));
+                                $("tbody").append(ligne);
+                } 
+            }
+        });
+    });
+
+</script>
+<script>
+    //Supprimer un client
+    
+    $(document).on('click', 'button.supprclient', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/client/"+x,
+            type:"delete",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                console.log(msg);
+            }
+        });        
+    });
+    
+</script>
+<script>
+    //chargement du formulaire de modification d'un client
+    
+    $(document).on('click', 'button.modifclient', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/client/"+x,
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                var client = jQuery.parseJSON(msg);
+                console.log(client);
+                $("#idmodifclient").val(client.id);
+                $("#nommodifclient").val(client.nom_client);
+                $("#prenommodifclient").val(client.prenom_client);
+                $("#telrenommodifclient").val(client.tel_client);
+            }
+        });         
+    });
+    
+</script>
+
+<script>
+        //enregistrement de la modification d'un client
+       $("#modifclient").submit(function(){
+           id=$(this).find("input[name=id]").val();
+           nom=$(this).find("input[name=nom]").val();
+           prenom=$(this).find("input[name=prenom]").val();
+           tel=$(this).find("input[name=tel]").val();
+           
+           var dataObject = { 'id': id, 'nom': nom, 'prenom': prenom, 'tel': tel};
+           
+           alert(JSON.stringify(dataObject));
+           
+           $.ajax({
+                url: "http://localhost:8000/client/",
+                type: 'PUT',
+                data: dataObject,
+                dataType: 'json',
+                success: function(data) {
+                  console.log('Load was performed.');
+                }
+              });
+       });
+
+</script> 
+
+
+{% endblock %}

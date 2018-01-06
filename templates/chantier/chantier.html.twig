@@ -1,0 +1,158 @@
+{% extends "base.html.twig" %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="src/style.css" media="screen" />
+{% endblock %}
+
+{% block body %}
+<h1>Enregistrer un nouveau chantier</h1>
+
+        <form method="post" action="#" id="formcom">
+            <p>
+                Id client : <input type="text"  name="id" />
+                Date début  : <input type="text"  name="datedebut" />
+                Durée : <input type="text" name="duree" />
+                <input type="submit" value="save" />
+            </p>
+        </form>
+
+<h1>Modifier un chantier</h1>
+    <div id="modifier">
+        <form  id="modifchantier">
+            <p>
+                Id : <input type="text"  name="id" id="idmodifchantier" disabled="disabled"/>
+                Choisir client : <input type="text"  name="idcli" id="idclientmodifchantier" />
+                Date début  : <input type="text"  name="datedebut" id="datedebutmodifchantier" />
+                Durée : <input type="text" name="duree" id="dureemodifchantier"/>
+                <input type="submit" value="save" />
+            </p>
+        </form>
+    </div>
+ 
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        //enregistrement d'un nouveau chantier
+       $(function(){
+           $("#formcom").submit(function(){
+              id=$(this).find("input[name=id]").val();
+              datedebut=$(this).find("input[name=datedebut]").val();
+              duree=$(this).find("input[name=duree]").val();
+
+              $.post("http://localhost:8000/chantier/",
+              {
+                  id:id,
+                  datedebut:datedebut,
+                  duree:duree
+              },
+                  function(data){
+                      alert(data);
+                  }
+                      )
+              return false;
+           }
+                   );
+           
+       });
+    </script> 
+    
+<h1>Tableau</h1><br>
+<div id="tableauchantier" class="panel panel-primary spacer">
+    <div class="panel-heading">Liste des chantiers</div>
+    <div class="panel-body">
+
+      <table class="table table-striped">
+        <tr id="tbody">
+          <th>Id Client</th>
+          <th>Date début</th>
+          <th>Durée</th>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+<script>
+    //retourner un tableau avec tous chantier
+    $(document).ready(function(){
+       $.ajax({
+            url: "http://localhost:8000/chantier",
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                //les données reçues sont en texte il faut les passer en json pour pouvoir les utiliser
+                var chantier = jQuery.parseJSON(msg);
+                
+                for (var i = 0 ; i < chantier.length ; i++){
+                    var ligne = $("<tr></tr>");
+				ligne.append($("<td>" + chantier[i].client.id + "</td>"));
+				ligne.append($("<td>" + chantier[i].datedebut_chantier + "</td>"));
+				ligne.append($("<td>" + chantier[i].duree_chantier + "</td>"));
+                                ligne.append($("<td>\n\
+                                                <button class='supprchantier' id="+chantier[i].id+">del</button>\n\
+                                                \n\<button class='modifchantier' id="+chantier[i].id+">Update</button>\n\
+                                                </td>"));
+                                $("tbody").append(ligne);
+                } 
+            }
+        });     
+    });  
+</script>
+<script>
+    //Supprimer un chantier
+    $(document).on('click', 'button.supprchantier', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/chantier/"+x,
+            type:"delete",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                console.log(msg);
+            }
+        });         
+    });
+</script>
+<script>
+    //chargement du formulaire de modification d'un chantier
+    $(document).on('click', 'button.modifchantier', function(){
+        var x = $(this).attr('id');
+        $.ajax({
+            url: "http://localhost:8000/chantier/"+x,
+            type:"get",
+            contentType: "application/json; charset=utf-8",
+            success: function(msg) {
+                var chantier = jQuery.parseJSON(msg);
+                console.log(chantier);
+                $("#idmodifchantier").val(chantier.id);
+                $("#idclientmodifchantier").val(chantier.client.id);
+                $("#datedebutmodifchantier").val(chantier.datedebut_chantier);
+                $("#dureemodifchantier").val(chantier.duree_chantier);
+            }
+        });         
+    });
+</script>
+
+<script>
+        //enregistrement de la modification d'un chantier
+       $("#modifchantier").submit(function(){
+           id=$(this).find("input[name=id]").val();
+           datedebut=$(this).find("input[name=datedebut]").val();
+           duree=$(this).find("input[name=duree]").val();
+           idcli=$(this).find("input[name=idcli]").val();
+           
+           var dataObject = { 'id': id, 'datedebut': datedebut, 'duree': duree, 'idcli':idcli};
+           
+           alert(JSON.stringify(dataObject));
+           
+           $.ajax({
+                url: "http://localhost:8000/chantier/",
+                type: 'PUT',
+                data: dataObject,
+                dataType: 'json',
+                success: function(data) {
+                  console.log('Load was performed.');
+                }
+              });
+       });
+    </script> 
+
+{% endblock %}
